@@ -1,9 +1,10 @@
 import json
+import sqlite3
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.db import 夹具目录, 连接
-from app.services import 装载, 贯验, 目录
+from app.services import 装载, 贯验, 目录, 切流
 
 路由 = APIRouter(prefix="/api")
 
@@ -11,6 +12,22 @@ from app.services import 装载, 贯验, 目录
 class 装载请求(BaseModel):
     批次编号: str = ""
     事件: list = Field(default_factory=list)
+
+
+class 开播请求(BaseModel):
+    房间键: str
+    开播事件时: str = ""
+
+
+class 闭播请求(BaseModel):
+    房间键: str
+
+
+def _失败闭(exc: Exception) -> HTTPException:
+    """切流/入流并发抢锁或状态冲突 → 409 失败闭，不吞错、不双写。"""
+    if 切流.是否锁冲突(exc):
+        return HTTPException(409, f"切流并发冲突（写锁竞争），失败闭拒绝：{exc}")
+    return HTTPException(409, str(exc))
 
 
 @路由.get("/健康")
@@ -44,6 +61,8 @@ def 列直播间():
         for r in rooms:
             wm = conn.execute("SELECT * FROM 水位线 WHERE 房间键=?", (r["房间键"],)).fetchone()
             r["水位线"] = dict(wm) if wm else None
+            z = conn.execute("SELECT * FROM 入流闸 WHERE 房间键=?", (r["房间键"],)).fetchone()
+            r["入流闸"] = dict(z) if z else None
         return rooms
     finally:
         conn.close()
@@ -125,7 +144,12 @@ def 列批次():
 
 @路由.post("/装载")
 def 做装载(体: 装载请求):
-    return 装载.装一批(体.model_dump())
+    try:
+        return 装载.装一批(体.model_dump())
+    except sqlite3.OperationalError as e:
+        if 切流.是否锁冲突(e):
+            raise _失败闭(e) from e
+        raise
 
 
 @路由.post("/装载/夹具")
@@ -148,6 +172,43 @@ def 列贯验():
         return [dict(r) for r in conn.execute("SELECT * FROM 窗贯验 ORDER BY 编号 DESC LIMIT 20")]
     finally:
         conn.close()
+
+
+@路由.get("/切流态")
+def 取切流(房间键: str):
+    try:
+        return 切流.取切流态(房间键)
+    except 切流.切流错误 as e:
+        raise HTTPException(404, str(e)) from e
+
+
+@路由.get("/切流审计")
+def 取切流审计(房间键: str = ""):
+    return 切流.列审计(房间键)
+
+
+@路由.post("/开播")
+def 做开播(体: 开播请求):
+    try:
+        return 切流.开播(体.房间键, 体.开播事件时 or None)
+    except 切流.切流错误 as e:
+        raise _失败闭(e) from e
+    except sqlite3.OperationalError as e:
+        if 切流.是否锁冲突(e):
+            raise _失败闭(e) from e
+        raise
+
+
+@路由.post("/闭播")
+def 做闭播(体: 闭播请求):
+    try:
+        return 切流.闭播(体.房间键)
+    except 切流.切流错误 as e:
+        raise _失败闭(e) from e
+    except sqlite3.OperationalError as e:
+        if 切流.是否锁冲突(e):
+            raise _失败闭(e) from e
+        raise
 
 
 @路由.get("/空桩")

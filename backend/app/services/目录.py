@@ -21,6 +21,8 @@ def 总览() -> dict:
             "撤回单": c("SELECT COUNT(*) FROM 撤回单"),
             "旁路匣": c("SELECT COUNT(*) FROM 旁路匣"),
             "装载批次": c("SELECT COUNT(*) FROM 装载批次"),
+            "切流拒收": c("SELECT COUNT(*) FROM 互动事件 WHERE 命运='切流拒收'"),
+            "切流审计": c("SELECT COUNT(*) FROM 切流审计"),
             "末次贯验": dict(末) if 末 else None,
         }
     finally:

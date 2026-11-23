@@ -8,6 +8,7 @@ import 撤回单 from "./pages/撤回单.jsx";
 import 旁路匣 from "./pages/旁路匣.jsx";
 import 窗互证 from "./pages/窗互证.jsx";
 import 窗参 from "./pages/窗参.jsx";
+import 切流台 from "./pages/切流台.jsx";
 
 const 主链 = [
   ["/", "热度台"],
@@ -16,6 +17,7 @@ const 主链 = [
   ["/热度窗", "③ 热度窗"],
   ["/撤回单", "④ 撤回单"],
   ["/旁路匣", "⑤ 旁路匣"],
+  ["/切流台", "⑥ 切流台"],
   ["/窗互证", "窗互证"],
 ];
 const 次链 = [["/窗参", "窗参"]];
@@ -49,6 +51,7 @@ export default function App() {
           <Route path="/热度窗" element={<热度窗 />} />
           <Route path="/撤回单" element={<撤回单 />} />
           <Route path="/旁路匣" element={<旁路匣 />} />
+          <Route path="/切流台" element={<切流台 />} />
           <Route path="/窗互证" element={<窗互证 />} />
           <Route path="/窗参" element={<窗参 />} />
         </Routes>

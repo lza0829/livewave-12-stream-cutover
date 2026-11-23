@@ -26,14 +26,14 @@ export default function 热度窗页() {
         <table>
           <thead>
             <tr>
-              <th>窗键</th><th>房间</th><th>窗起</th><th>窗止</th><th>状态</th>
+              <th>窗键</th><th>房间</th><th>切流代次</th><th>窗起</th><th>窗止</th><th>状态</th>
               <th>点赞合计</th><th>送礼合计</th><th>笔数</th><th>版本</th><th>关闭处理时</th>
             </tr>
           </thead>
           <tbody>
             {窗.map((r) => (
               <tr key={r.窗键}>
-                <td className="码">{r.窗键}</td><td>{r.房间键}</td>
+                <td className="码">{r.窗键}</td><td>{r.房间键}</td><td>{r.切流代次}</td>
                 <td className="码">{r.窗起事件时}</td><td className="码">{r.窗止事件时}</td>
                 <td>{r.状态}</td><td>{r.点赞合计}</td><td>{r.送礼合计}</td>
                 <td>{r.事件笔数}</td><td>{r.版本}</td>
